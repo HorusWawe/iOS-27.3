@@ -17,7 +17,6 @@ for bin in repo git python3 make gcc g++ curl; do
 done
 [[ -c /dev/kvm && -r /dev/kvm && -w /dev/kvm ]] || fail "/dev/kvm is unavailable. Enable KVM/nested virtualization and grant the current user access."
 command -v launch_cvd >/dev/null 2>&1 || fail "Cuttlefish host packages are missing. Install android-cuttlefish host packages first."
-command -v adb >/dev/null 2>&1 || fail "adb is missing. Install Android platform-tools or add them to PATH."
 
 FREE_GB="$(df -BG "$AOSP_DIR" 2>/dev/null | awk 'NR==2 {gsub(/G/,"",$4); print $4}')"
 if [[ ! "$FREE_GB" =~ ^[0-9]+$ ]]; then
@@ -50,10 +49,13 @@ m -j"$JOBS"
 
 info "Boot the source-built OS in Cuttlefish"
 launch_cvd --start_webrtc=true --daemon
-adb wait-for-device
+ADB_BIN="${ANDROID_HOST_OUT}/bin/adb"
+[[ -x "$ADB_BIN" ]] || ADB_BIN="$(command -v adb || true)"
+[[ -n "$ADB_BIN" && -x "$ADB_BIN" ]] || fail "adb was not found in ANDROID_HOST_OUT or PATH after the build."
+"$ADB_BIN" wait-for-device
 
 echo
 echo "Cuttlefish is booted from this AOSP source tree."
 echo "Open https://localhost:8443 in a browser on this host."
-echo "Use 'adb shell' to access the running Android system."
+echo "Use '$ADB_BIN shell' to access the running Android system."
 echo "Stop it with: stop_cvd"
