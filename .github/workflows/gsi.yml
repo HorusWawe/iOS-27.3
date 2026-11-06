@@ -2,12 +2,6 @@ name: AOSP GSI build (ephemeral Google Cloud VM)
 
 on:
   workflow_dispatch:
-    inputs:
-      clean_sync:
-        description: Remove the previous AOSP source checkout (fresh sync)
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -72,14 +66,13 @@ jobs:
           gcloud compute ssh "$INSTANCE" --project="$GCP_PROJECT_ID" --zone="$GCE_ZONE" --quiet --command='
             set -euxo pipefail
             sudo apt-get update
-            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev libc6-dev-i386 libncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python3 python-is-python3
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev libc6-dev-i386 libncurses5-dev libncursesw5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python3 python-is-python3 openjdk-17-jdk rsync bc bzip2 lz4 zstd liblz4-tool libelf-dev libssl-dev ccache
             mkdir -p "$HOME/bin"
             curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo"
             chmod a+x "$HOME/bin/repo"
             export PATH="$HOME/bin:$PATH"
             git clone --depth=1 https://github.com/HorusWawe/iOS-27.3.git "$HOME/iOS-27.3"
             cd "$HOME/iOS-27.3"
-            if [[ "${{ inputs.clean_sync }}" == "true" ]]; then rm -rf /mnt/aosp/.repo; fi
             AOSP_DIR=/mnt/aosp JOBS=16 bash tools/build-gsi.sh
           '
 
