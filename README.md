@@ -1,6 +1,6 @@
 # iOS 27.3 for TECNO KL5n
 
-An Android-native iOS-inspired system shell, built for Android 14 (API 34) on ARM64 devices.
+An AOSP-based Android 14 ARM64 Generic System Image project for TECNO KL5n, with an iOS-inspired native system interface.
 
 ## Project status
 
