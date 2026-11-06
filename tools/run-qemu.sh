@@ -8,22 +8,21 @@ QEMU="${QEMU_AARCH64:-qemu-system-aarch64}"
 FIRMWARE="${UEFI_FIRMWARE:-}"
 
 if [[ -z "$FIRMWARE" ]]; then
-  FIRMWARE="$(find /usr/share -type f \\( -name 'QEMU_EFI.fd' -o -name 'AAVMF_CODE.fd' \\) -print -quit)"
+  FIRMWARE="$(find /usr/share -type f -name 'QEMU_EFI.fd' -print -quit)"
+fi
+if [[ -z "$FIRMWARE" ]]; then
+  FIRMWARE="$(find /usr/share -type f -name 'AAVMF_CODE.fd' -print -quit)"
 fi
 
 if [[ -z "$FIRMWARE" || ! -f "$FIRMWARE" ]]; then
   echo "AArch64 UEFI firmware was not found." >&2
   exit 1
 fi
-
 if ! command -v "$QEMU" >/dev/null 2>&1; then
   echo "qemu-system-aarch64 is not installed." >&2
   exit 1
 fi
 
-# Ubuntu ships QEMU's EFI virtio option ROM in the ipxe-qemu package.
-# Point QEMU at the directory containing it instead of relying on its
-# compiled-in ROM search path.
 VIRTIO_ROM="$(find /usr/share /usr/lib -type f -name 'efi-virtio.rom' -print -quit)"
 if [[ -z "$VIRTIO_ROM" ]]; then
   echo "efi-virtio.rom was not found. Ensure the ipxe-qemu package is installed." >&2
@@ -35,14 +34,7 @@ echo "Using UEFI firmware: $FIRMWARE"
 
 LOG="build/qemu-boot.log"
 set +e
-timeout 18s "$QEMU" \\
-  -L "$ROM_DIR" \\
-  -machine virt -cpu cortex-a72 -m 512M \\
-  -bios "$FIRMWARE" \\
-  -drive if=none,id=esp,format=raw,file=build/ios27.3-arm64.img \\
-  -device virtio-blk-device,drive=esp \\
-  -display none -serial stdio -monitor none -no-reboot \\
-  2>&1 | tee "$LOG"
+timeout 18s "$QEMU" -L "$ROM_DIR" -machine virt -cpu cortex-a72 -m 512M -bios "$FIRMWARE" -drive if=none,id=esp,format=raw,file=build/ios27.3-arm64.img -device virtio-blk-device,drive=esp -display none -serial stdio -monitor none -no-reboot 2>&1 | tee "$LOG"
 QEMU_STATUS=${PIPESTATUS[0]}
 set -e
 
