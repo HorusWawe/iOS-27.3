@@ -25,13 +25,25 @@ Repository: https://github.com/dipa-studio/ios-sweet
 
 This is an iOS 16.7.16 userland + XNU 8796 bring-up for Redmi Note 10 Pro (`sweet`, Qualcomm SM7150). Its public documentation describes a boot shim, patched XNU, Apple device tree generation, framebuffer, touch and button drivers. It is a useful end-to-end reference for the XNU/iOS 16 generation, but its Qualcomm addresses and drivers are not KL5n drivers.
 
-### iOS 27 kernel research: ios-fuxi
+### iOS 27.3 kernel and XNU research
 
-Repository: https://github.com/bangprovn/ios-fuxi
+Current target: iOS 27.3 beta build 24C5037i, released November 3, 2026. Its reported Darwin kernel is XNU 13432.60.57. The exact matching XNU source snapshot and platform inputs must be pinned before the project can claim a 27.3 kernel baseline.
 
-Its `xnu27/` lane targets XNU 12377.121.6 / iOS 27.0.1 with an arm64e profile, based on work for Xiaomi 13 (`fuxi`, Snapdragon 8 Gen 2 / SM8550) and UniXNU. The repository's own iOS 27 lane notes explicitly state that this lane had not yet run on the device at the time those notes were written; its iOS 27 userland is a separate later milestone. The main Fuxi README still describes the iOS 16.7 userland path.
+References:
 
-This is a source-level reference for the newer XNU generation, not a ready-made iOS 27 image for KL5n.
+- Apple Developer release entry: https://developer.apple.com/news/releases/?id=11032026a
+- Kernel build identification: https://theapplewiki.com/wiki/XNU
+- Firmware diff index: https://github.com/ipsw-diffs/ios-27
+
+### ios-fuxi and UniXNU
+
+Repositories: https://github.com/bangprovn/ios-fuxi and https://github.com/UniXNU/UniXNU
+
+The public ios-fuxi `xnu27/` lane documents a 27.0.1-era XNU 12377.121.6 port for Xiaomi 13 (`fuxi`, Snapdragon 8 Gen 2 / SM8550). Its own notes say that lane had not yet run on the device at the time they were written. It is useful for loader, ADT, kernel patching and bring-up structure, but it is not the exact XNU 13432.60.57 baseline for iOS 27.3.
+
+UniXNU's current requirements state that iOS 27 is arm64e-only and requires native PAC hardware. KL5n CPU feature flags must therefore be checked before choosing this target. The KL5n collector records `/proc/cpuinfo`; look for `paca` and `pacg` in the Features field. Do not assume the SoC supports PAC based only on its ARM64 ABI.
+
+These projects are source-level references, not ready-made KL5n firmware or iOS images.
 
 ## KL5n bring-up boundary
 
