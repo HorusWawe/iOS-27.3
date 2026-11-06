@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -54,21 +55,21 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private data class AppEntry(val name: String, val icon: ImageVector, val tint: Color)
+private data class AppEntry(val name: String, val icon: Int, val tint: Color)
 
 private val apps = listOf(
-    AppEntry("Настройки", Icons.Default.Settings, Color(0xFF8E8E93)),
-    AppEntry("Фото", Icons.Default.PhotoLibrary, Color(0xFFFF4B75)),
-    AppEntry("Камера", Icons.Default.CameraAlt, Color(0xFF555B66)),
-    AppEntry("Сообщения", Icons.Default.ChatBubble, Color(0xFF36C96B)),
-    AppEntry("Safari", Icons.Default.Language, Color(0xFF36A5F5)),
-    AppEntry("Музыка", Icons.Default.MusicNote, Color(0xFFFF3B55)),
-    AppEntry("Телефон", Icons.Default.Call, Color(0xFF31C65B)),
-    AppEntry("Календарь", Icons.Default.CalendarMonth, Color(0xFFF4F4F7)),
-    AppEntry("Погода", Icons.Default.Cloud, Color(0xFF55B9F5)),
-    AppEntry("Заметки", Icons.Default.Notes, Color(0xFFFFD34E)),
-    AppEntry("Часы", Icons.Default.AccessTime, Color(0xFF20232D)),
-    AppEntry("Файлы", Icons.Default.Folder, Color(0xFF4D9BFF))
+    AppEntry("Настройки", R.drawable.ios_settings, Color(0xFF8E8E93)),
+    AppEntry("Фото", R.drawable.ios_photos, Color(0xFFFF4B75)),
+    AppEntry("Камера", R.drawable.ios_camera, Color(0xFF555B66)),
+    AppEntry("Сообщения", R.drawable.ios_messages, Color(0xFF36C96B)),
+    AppEntry("Safari", R.drawable.ios_safari, Color(0xFF36A5F5)),
+    AppEntry("Музыка", R.drawable.ios_music, Color(0xFFFF3B55)),
+    AppEntry("Телефон", R.drawable.ios_phone, Color(0xFF31C65B)),
+    AppEntry("Календарь", R.drawable.ios_calendar, Color(0xFFF4F4F7)),
+    AppEntry("Погода", R.drawable.ios_weather, Color(0xFF55B9F5)),
+    AppEntry("Заметки", R.drawable.ios_notes, Color(0xFFFFD34E)),
+    AppEntry("Часы", R.drawable.ios_clock, Color(0xFF20232D)),
+    AppEntry("Файлы", R.drawable.ios_files, Color(0xFF4D9BFF))
 )
 
 @Composable
@@ -118,7 +119,7 @@ private fun LockScreen(onUnlock: () -> Unit) {
         }
         GlassPanel(Modifier.align(Alignment.TopCenter).padding(top = 250.dp).padding(horizontal = 20.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Cloud, null, tint = White, modifier = Modifier.size(30.dp))
+                Icon(R.drawable.ios_weather, null, tint = White, modifier = Modifier.size(30.dp))
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text("Погода", color = White, fontWeight = FontWeight.SemiBold)
@@ -133,7 +134,7 @@ private fun LockScreen(onUnlock: () -> Unit) {
         ) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 42.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 LockShortcut(Icons.Default.Flashlight)
-                LockShortcut(Icons.Default.CameraAlt)
+                LockShortcut(R.drawable.ios_camera)
             }
             Spacer(Modifier.height(28.dp))
             Box(
@@ -191,7 +192,7 @@ private fun HomeScreen(onOpen: (String) -> Unit) {
                                 .background(Brush.linearGradient(listOf(app.tint, app.tint.copy(alpha = .72f)))),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(app.icon, contentDescription = app.name, tint = Color.White, modifier = Modifier.size(31.dp))
+                            Image(painter = painterResource(app.icon), contentDescription = app.name, modifier = Modifier.size(61.dp))
                         }
                         Spacer(Modifier.height(6.dp))
                         Text(app.name, color = White, fontSize = 11.sp, textAlign = TextAlign.Center, maxLines = 1)
@@ -203,7 +204,7 @@ private fun HomeScreen(onOpen: (String) -> Unit) {
                     listOf(apps[6], apps[3], apps[4], apps[5]).forEach { app ->
                         Box(Modifier.clickable { onOpen(app.name) }) {
                             Box(Modifier.size(55.dp).clip(RoundedCornerShape(17.dp)).background(app.tint), contentAlignment = Alignment.Center) {
-                                Icon(app.icon, null, tint = Color.White, modifier = Modifier.size(28.dp))
+                                Image(painter = painterResource(app.icon), contentDescription = app.name, modifier = Modifier.size(55.dp))
                             }
                         }
                     }
@@ -240,7 +241,7 @@ private fun AppSurface(name: String, onBack: () -> Unit) {
             else -> {
                 Surface(color = Color.White, shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(22.dp)) {
-                        if (app != null) Icon(app.icon, null, tint = app.tint, modifier = Modifier.size(42.dp))
+                        if (app != null) Image(painter = painterResource(app.icon), contentDescription = app.name, modifier = Modifier.size(64.dp))
                         Spacer(Modifier.height(14.dp))
                         Text(name, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF17171B))
                         Text("Приложение оболочки iOS 27", color = Color.Gray, fontSize = 14.sp)
