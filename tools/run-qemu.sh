@@ -34,7 +34,7 @@ echo "Using UEFI firmware: $FIRMWARE"
 
 LOG="build/qemu-boot.log"
 set +e
-timeout 18s "$QEMU" -L "$ROM_DIR" -machine virt -cpu cortex-a72 -m 512M -bios "$FIRMWARE" -device ramfb -drive if=none,id=esp,format=raw,file=build/ios27.3-arm64.img -device virtio-blk-device,drive=esp -display none -serial stdio -monitor none -no-reboot 2>&1 | tee "$LOG"
+timeout 18s "$QEMU" -L "$ROM_DIR" -machine virt -cpu cortex-a72 -m 512M -bios "$FIRMWARE" -device ramfb -device qemu-xhci -device usb-mouse -device usb-kbd -drive if=none,id=esp,format=raw,file=build/ios27.3-arm64.img -device virtio-blk-device,drive=esp -display none -serial stdio -monitor none -no-reboot 2>&1 | tee "$LOG"
 QEMU_STATUS=${PIPESTATUS[0]}
 set -e
 
@@ -47,4 +47,15 @@ if ! grep -q 'GOP_READY' "$LOG"; then
   exit 1
 fi
 
-echo "QEMU boot and GOP smoke tests passed."
+if grep -q 'POINTER_READY' "$LOG"; then
+  echo "QEMU USB pointer protocol detected."
+else
+  echo "::warning::QEMU booted, but UEFI did not expose Simple Pointer. Check USB input support."
+fi
+
+if ! grep -q 'INTERACTIVE_UI_READY' "$LOG"; then
+  echo "Interactive boot UI did not initialize." >&2
+  exit 1
+fi
+
+echo "QEMU boot, GOP and interactive UI smoke tests passed."
