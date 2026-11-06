@@ -8,6 +8,7 @@ This directory records the first physical-device target for iOS 27.3.
 | CPU ABI | ARM64 / arm64-v8a |
 | Android platform ID | mt6768 (reported) |
 | Retail SoC identification | Helio G81 / MT6769S is reported by device-spec sources; verify against live device data before selecting the exact silicon profile |
+| CPU cores (reported) | 2× Cortex-A75 + 6× Cortex-A55; verify CPU Features and PAC support from the live kernel |
 | Factory software family | Android 14 / API 34 |
 | Vendor API | 31 |
 | Treble | Enabled |
@@ -42,7 +43,7 @@ A Windows/Linux host with ADB and the phone's Magisk root can collect the curren
 python tools/collect-kl5n.py
 ```
 
-The script writes `build/kl5n-device-report.zip`. It records selected properties, device-tree model/compatible strings, memory map, interrupt list, partition names/symlinks, input devices, display/backlight classes and bus-device listings. It does not read or write partition contents. The optional `--include-raw-dtb` flag saves the raw DTB separately; inspect it locally before sharing because it may contain device-specific calibration data.
+The script writes `build/kl5n-device-report.zip`. It records selected properties, CPU model/features (including PAC flags if exposed), device-tree model/compatible strings, memory map, interrupt list, partition names/symlinks, input devices, display/backlight classes and bus-device listings. It does not read or write partition contents. The optional `--include-raw-dtb` flag saves the raw DTB separately; inspect it locally before sharing because it may contain device-specific calibration data.
 
 ## Current status
 
