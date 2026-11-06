@@ -1,58 +1,53 @@
-# iOS 27.3 for TECNO KL5n
+# iOS 27.3
 
-AOSP-based Android 14 project. Development uses **Cuttlefish**, the AOSP virtual Android device, so the source-built OS can be booted and interacted with directly from the build tree instead of exporting and manually flashing a standalone `system.img`.
+An independent ARM64 platform project inspired by the iOS software architecture and user experience, with TECNO KL5n as the first hardware target.
 
-## Run the OS from source
+This repository is **not an Android GSI, Android ROM, launcher, or Cuttlefish build**. The old AOSP/GSI/Cuttlefish implementation has been removed.
 
-The development target is:
+## First milestone: a real ARM64 boot target
 
-- AOSP branch: `android14-gsi`
-- Cuttlefish product: `aosp_cf_x86_64_phone-userdebug`
-- Host: Linux x86_64 with KVM
-- Runtime: Cuttlefish + browser-based WebRTC viewer
-- Browser UI: `https://localhost:8443`
-- Required free disk: at least 400 GB
+The initial milestone is a UEFI-bootable ARM64 prototype:
 
-### One-time host setup
+- C and GNU-EFI for the first firmware entry point.
+- ARM64 / AArch64 target.
+- QEMU \`virt\` machine for repeatable boot testing.
+- GitHub Actions builds the EFI executable, creates a FAT EFI System Partition image, boots it in QEMU, and uploads the result.
+- The prototype draws a basic graphical boot screen through GOP and reports a machine-readable boot marker.
 
-Install the Cuttlefish host packages using the official AOSP procedure:
+The first image is a **development boot image**, not a flashable KL5n ROM. It proves the ARM64 build and boot path before kernel, runtime, drivers, and phone integration are added.
 
-```bash
-sudo apt install -y git devscripts equivs config-package-dev debhelper-compat golang curl
-git clone https://github.com/google/android-cuttlefish
-cd android-cuttlefish
-tools/buildutils/build_packages.sh
-sudo apt install -y ./cuttlefish-base_*.deb ./cuttlefish-user_*.deb
-sudo usermod -aG kvm,cvdnetwork,render "$USER"
-sudo reboot
-```
+## Build from GitHub Actions
 
-After reboot, install the AOSP host dependencies and the `repo` launcher. The build host needs working `/dev/kvm`.
+1. Open the repository's **Actions** tab.
+2. Select **iOS 27.3 ARM64 build**.
+3. Run the workflow with **Run workflow**, or push a commit to \`main\`.
+4. Download the \`ios27.3-arm64-uefi\` artifact from the completed run.
 
-### Build and boot
+The workflow also runs a QEMU boot smoke test. A successful build must produce the EFI application and pass the boot-marker check.
 
-From the project checkout:
+## Local build on Windows
 
-```bash
-AOSP_DIR=/mnt/aosp JOBS=16 bash tools/run-cuttlefish.sh
-```
+The intended developer host is Windows. The CI build currently uses Ubuntu runners because the cross-compiler, GNU-EFI and QEMU packages are readily available there. Windows-native build scripts/toolchain support can be added without changing the ARM64 target.
 
-The script syncs Android 14 sources, applies the project product identity, selects the Cuttlefish lunch target, builds the OS and launches it. No standalone GSI artifact is exported. AOSP still generates internal build partitions because Cuttlefish needs them to boot, but the workflow goes straight from source build to running virtual device.
+For local reproduction, use the same commands documented in \`.github/workflows/ios27.yml\` inside an Ubuntu environment. No Linux installation is required as the user's main operating system.
 
-Use the AOSP-built `adb` from `ANDROID_HOST_OUT/bin/adb` for the device shell. Open `https://localhost:8443` on the Linux host to interact with the virtual phone. Stop it with `stop_cvd`.
+## Repository layout
 
-## Why the emulator target is x86_64
+\`\`\`text
+.github/workflows/ios27.yml    CI build, QEMU boot test, artifact upload
+src/boot/main.c                ARM64 UEFI entry point and GOP boot screen
+tools/build.sh                 Cross-compile and create EFI disk image
+tools/run-qemu.sh              QEMU boot smoke test
+device/tecno/kl5n/README.md    Hardware target notes
+docs/ROADMAP.md                Platform milestones and compatibility plan
+\`\`\`
 
-The Cuttlefish host runs on a Linux x86_64 machine with KVM. The virtual Android target is therefore x86_64 for efficient native virtualization. This is the interactive UI/framework development target, not the final KL5n firmware architecture. The release target remains ARM64 and must be validated separately against the device's vendor interfaces and partition layout.
+## Platform direction
 
-## TECNO KL5n device boundary
+The long-term target is an iOS-compatible platform implementation, not an Android userspace with a reskinned interface. IPA support requires a Mach-O loader, compatible ABI, Objective-C runtime, and implementations of the frameworks used by applications. APK support, if pursued, will be a separate compatibility subsystem. Neither runtime is claimed to exist in this boot prototype.
 
-The final GSI supplies the generic Android system side only. Device-specific `vendor`, `odm`, `boot`, `init_boot`, `vendor_boot`, `dtbo`, `vbmeta`, and super metadata remain tied to the exact KL5n firmware.
+## TECNO KL5n
 
-Known target facts: TECNO KL5n, Android 14/API 34, ARM64, MediaTek MT6768, vendor API 31, Treble and dynamic partitions enabled, Virtual A/B enabled.
+Known target: TECNO KL5n, ARM64, MediaTek MT6768, Android 14-era vendor firmware. The QEMU image is only the development target. Booting QEMU does not mean the phone's boot chain, display, touch, modem, camera, or power hardware is supported yet.
 
-A successful Cuttlefish boot proves that the source-built virtual target starts. It does not prove KL5n hardware compatibility.
-
-## Current implementation status
-
-The repository now has a source-to-Cuttlefish development path. The iOS-style SystemUI, Keyguard, framework overlays, boot animation and native system apps remain implementation tasks; they are not represented as completed.
+See [device notes](device/tecno/kl5n/README.md) and [roadmap](docs/ROADMAP.md).
