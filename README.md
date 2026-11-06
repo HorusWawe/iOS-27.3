@@ -38,7 +38,7 @@ For local reproduction, use the same commands documented in \`.github/workflows/
 src/boot/main.c                ARM64 UEFI entry point and GOP boot screen
 tools/build.sh                 Cross-compile and create EFI disk image
 tools/run-qemu.sh              QEMU boot smoke test with USB input
- tools/collect-kl5n.py          Read-only KL5n hardware inventory
+tools/collect-kl5n.py          Read-only KL5n hardware inventory
 device/tecno/kl5n/README.md    Hardware target notes
 docs/ROADMAP.md                Platform milestones and compatibility plan
 \`\`\`
