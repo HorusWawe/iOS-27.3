@@ -28,7 +28,7 @@ repo sync -c -j"$JOBS" --force-sync
 mkdir -p vendor/ios27
 cp "$ROOT/vendor/ios27/ios27_gsi.mk" vendor/ios27/ios27_gsi.mk
 
-GSI_PRODUCT="device/generic/common/gsi_common.mk"
+GSI_PRODUCT="device/generic/common/gsi_product.mk"
 if [[ ! -f "$GSI_PRODUCT" ]]; then
   echo "Expected GSI product makefile not found: $GSI_PRODUCT" >&2
   echo "AOSP branch layout changed; refusing to patch an unknown file." >&2
