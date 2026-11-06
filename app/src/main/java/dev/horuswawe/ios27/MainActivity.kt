@@ -120,7 +120,7 @@ private fun LockScreen(onUnlock: () -> Unit) {
         }
         GlassPanel(Modifier.align(Alignment.TopCenter).padding(top = 250.dp).padding(horizontal = 20.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Icon(R.drawable.ios_weather, null, tint = White, modifier = Modifier.size(30.dp))
+                Image(painter = painterResource(R.drawable.ios_weather), contentDescription = "Погода", modifier = Modifier.size(30.dp))
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text("Погода", color = White, fontWeight = FontWeight.SemiBold)
@@ -281,5 +281,12 @@ private fun StatusPill(modifier: Modifier = Modifier) {
 private fun LockShortcut(icon: ImageVector) {
     Box(Modifier.size(48.dp).clip(CircleShape).background(Color(0x55FFFFFF)), contentAlignment = Alignment.Center) {
         Icon(icon, null, tint = White, modifier = Modifier.size(22.dp))
+    }
+}
+
+@Composable
+private fun LockShortcut(iconRes: Int) {
+    Box(Modifier.size(48.dp).clip(CircleShape).background(Color(0x55FFFFFF)), contentAlignment = Alignment.Center) {
+        Image(painter = painterResource(iconRes), contentDescription = "Камера", modifier = Modifier.size(28.dp))
     }
 }
