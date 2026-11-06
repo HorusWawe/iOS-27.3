@@ -29,6 +29,10 @@ Before a phone image can be produced, the project needs verified information for
 
 No partition sizes, addresses, kernel sources or hardware support are invented here. Record them only after extracting and checking the exact KL5n firmware/device data.
 
+## Related MediaTek reference
+
+Project Silicium has an MT6768-family package and a Redmi 9 (`lancelot`) board port. The upstream status page places that board in its MediaTek P65/G80 section; it is not a KL5n profile. Reuse only verified SoC-level implementation patterns. Do not copy lancelot's board addresses, display timings, storage configuration or device image. See [reference-port analysis](../../../docs/REFERENCE_PORTS.md).
+
 ## Current status
 
 The first CI target is generic ARM64 UEFI under QEMU. It is deliberately separate from the phone target. A successful QEMU boot is not evidence of KL5n hardware support.
