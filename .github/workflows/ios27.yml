@@ -11,23 +11,28 @@ permissions:
   contents: read
 
 concurrency:
-  group: ios27-${{ github.ref }}
+  group: ios27-\${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build-and-boot:
     name: Build ARM64 EFI image and boot in QEMU
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 12
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install toolchain and emulator
+        timeout-minutes: 4
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          set -euo pipefail
+          sudo apt-get update \
+            -o Acquire::http::Timeout=20 \
+            -o Acquire::https::Timeout=20 \
+            -o Acquire::Retries=1
+          sudo apt-get install -y --no-install-recommends \
             clang \
             lld \
             qemu-system-arm \
@@ -36,9 +41,11 @@ jobs:
             dosfstools
 
       - name: Build ARM64 EFI image
+        timeout-minutes: 2
         run: bash tools/build.sh
 
       - name: Boot image in QEMU
+        timeout-minutes: 2
         run: bash tools/run-qemu.sh
 
       - name: Upload boot image
