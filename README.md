@@ -1,6 +1,6 @@
 # iOS 27.3 for TECNO KL5n
 
-AOSP-based Android 14 project. Development now uses **Cuttlefish**, the AOSP virtual Android device, so the source-built OS can be booted and interacted with directly from the build tree instead of exporting and manually flashing a standalone `system.img`.
+AOSP-based Android 14 project. Development uses **Cuttlefish**, the AOSP virtual Android device, so the source-built OS can be booted and interacted with directly from the build tree instead of exporting and manually flashing a standalone `system.img`.
 
 ## Run the OS from source
 
@@ -11,10 +11,27 @@ The development target is:
 - Host: Linux x86_64 with KVM
 - Runtime: Cuttlefish + browser-based WebRTC viewer
 - Browser UI: `https://localhost:8443`
+- Required free disk: at least 400 GB
 
-On the Linux build host, install the AOSP host dependencies and the Cuttlefish host packages. The official Cuttlefish setup builds and installs the host Debian packages from [google/android-cuttlefish](https://github.com/google/android-cuttlefish). The host must have working `/dev/kvm`.
+### One-time host setup
 
-Then run:
+Install the Cuttlefish host packages using the official AOSP procedure:
+
+```bash
+sudo apt install -y git devscripts equivs config-package-dev debhelper-compat golang curl
+git clone https://github.com/google/android-cuttlefish
+cd android-cuttlefish
+tools/buildutils/build_packages.sh
+sudo apt install -y ./cuttlefish-base_*.deb ./cuttlefish-user_*.deb
+sudo usermod -aG kvm,cvdnetwork,render "$USER"
+sudo reboot
+```
+
+After reboot, install the AOSP host dependencies and the `repo` launcher. The build host needs working `/dev/kvm`.
+
+### Build and boot
+
+From the project checkout:
 
 ```bash
 AOSP_DIR=/mnt/aosp JOBS=16 bash tools/run-cuttlefish.sh
@@ -22,7 +39,7 @@ AOSP_DIR=/mnt/aosp JOBS=16 bash tools/run-cuttlefish.sh
 
 The script syncs Android 14 sources, applies the project product identity, selects the Cuttlefish lunch target, builds the OS and launches it. No standalone GSI artifact is exported. AOSP still generates internal build partitions because Cuttlefish needs them to boot, but the workflow goes straight from source build to running virtual device.
 
-Use `adb shell` for the device shell and `stop_cvd` to stop the virtual device.
+Use the AOSP-built `adb` from `ANDROID_HOST_OUT/bin/adb` for the device shell. Open `https://localhost:8443` on the Linux host to interact with the virtual phone. Stop it with `stop_cvd`.
 
 ## Why the emulator target is x86_64
 
