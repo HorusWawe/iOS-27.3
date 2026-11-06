@@ -1,9 +1,8 @@
 # iOS 27.3 product integration
 
-The AOSP build imports `ios27_gsi_arm64.mk` through `AndroidProducts.mk` and selects the dedicated lunch target:
+The repository currently has two distinct targets:
 
-`ios27_gsi_arm64-userdebug`
+- **Cuttlefish development target:** `aosp_cf_x86_64_phone-userdebug`, launched directly from the AOSP build tree for interactive development and testing.
+- **TECNO KL5n release target:** Android 14 ARM64 GSI, which remains a separate device-compatibility and packaging task.
 
-The product inherits the official Android 14 ARM64 GSI configuration from `device/generic/common/gsi_arm64.mk`. The resulting output remains the standard generic ARM64 system image at `out/target/product/generic_arm64/system.img`.
-
-No Android APK, launcher-only package, or Magisk module is used as the operating-system deliverable.
+The Cuttlefish product identity is defined in `ios27_cuttlefish.mk`. The project does not treat a launcher APK as an operating system. Native SystemUI, Keyguard, framework overlays, boot animation and system apps still need implementation in AOSP.
