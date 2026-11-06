@@ -12,7 +12,7 @@ The initial milestone is a UEFI-bootable ARM64 prototype:
 - ARM64 / AArch64 target.
 - QEMU \`virt\` machine for repeatable boot testing.
 - GitHub Actions builds the EFI executable, creates a FAT EFI System Partition image, boots it in QEMU, and uploads the result.
-- The prototype draws a basic graphical boot screen through GOP and reports a machine-readable boot marker.
+- The prototype draws a persistent graphical boot screen through GOP, reports whether GOP was detected, and remains on the splash instead of returning to the firmware boot menu.
 
 The first image is a **development boot image**, not a flashable KL5n ROM. It proves the ARM64 build and boot path before kernel, runtime, drivers, and phone integration are added.
 
@@ -23,7 +23,7 @@ The first image is a **development boot image**, not a flashable KL5n ROM. It pr
 3. Run the workflow with **Run workflow**, or push a commit to \`main\`.
 4. Download the \`ios27.3-arm64-uefi\` artifact from the completed run.
 
-The workflow also runs a QEMU boot smoke test. A successful build must produce the EFI application and pass the boot-marker check.
+The workflow runs QEMU with a RAM framebuffer device and checks both the EFI boot marker and GOP availability. The EFI app intentionally remains on the boot screen, so the firmware UI cannot immediately overwrite it.
 
 ## Local build on Windows
 
