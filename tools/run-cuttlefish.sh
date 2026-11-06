@@ -23,16 +23,12 @@ if [[ ! "$FREE_GB" =~ ^[0-9]+$ ]]; then
   mkdir -p "$AOSP_DIR"
   FREE_GB="$(df -BG "$AOSP_DIR" | awk 'NR==2 {gsub(/G/,"",$4); print $4}')"
 fi
-(( FREE_GB >= 350 )) || fail "Need at least 350 GB free for AOSP source and build output; found ${FREE_GB} GB."
+(( FREE_GB >= 400 )) || fail "Need at least 400 GB free for AOSP source and build output; found ${FREE_GB} GB."
 
 info "Sync Android 14 source"
 mkdir -p "$AOSP_DIR"
 cd "$AOSP_DIR"
-if [[ ! -d .repo ]]; then
-  repo init -u https://android.googlesource.com/platform/manifest -b "$AOSP_BRANCH" --partial-clone
-else
-  repo init -u https://android.googlesource.com/platform/manifest -b "$AOSP_BRANCH" --partial-clone
-fi
+repo init -u https://android.googlesource.com/platform/manifest -b "$AOSP_BRANCH" --partial-clone
 repo sync -c -j"$JOBS" --force-sync
 
 [[ -f "$PRODUCT_MK" ]] || fail "Cuttlefish product makefile not found: $PRODUCT_MK"
