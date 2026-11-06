@@ -33,6 +33,16 @@ No partition sizes, addresses, kernel sources or hardware support are invented h
 
 Project Silicium has an MT6768-family package and a Redmi 9 (`lancelot`) board port. The upstream status page places that board in its MediaTek P65/G80 section; it is not a KL5n profile. Reuse only verified SoC-level implementation patterns. Do not copy lancelot's board addresses, display timings, storage configuration or device image. See [reference-port analysis](../../../docs/REFERENCE_PORTS.md).
 
+## Read-only hardware inventory
+
+A Windows/Linux host with ADB and the phone's Magisk root can collect the current board metadata without touching partitions:
+
+```powershell
+python tools/collect-kl5n.py
+```
+
+The script writes `build/kl5n-device-report.zip`. It records selected properties, device-tree model/compatible strings, memory map, interrupt list, partition names/symlinks, input devices, display/backlight classes and bus-device listings. It does not read or write partition contents. The optional `--include-raw-dtb` flag saves the raw DTB separately; inspect it locally before sharing because it may contain device-specific calibration data.
+
 ## Current status
 
 The first CI target is generic ARM64 UEFI under QEMU. It is deliberately separate from the phone target. A successful QEMU boot is not evidence of KL5n hardware support.
