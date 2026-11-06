@@ -24,25 +24,31 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Generate boot animation
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip zip
+          python3 -m pip install --user pillow
+          curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip -o /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp
+
+      - name: Generate boot animation and app icons
         run: |
           python3 tools/generate_bootanimation.py
-          mkdir -p app/src/main/res/drawable-nodpi
           python3 tools/generate_app_icons.py
 
       - name: Build debug APK
-        run: |
-          chmod +x gradlew
-          ./gradlew --no-daemon assembleDebug
+        run: /tmp/gradle-8.9/bin/gradle --no-daemon assembleDebug
 
       - name: Package Magisk module
         run: |
           mkdir -p out/ios27-magisk/system/product/media
           cp magisk/module.prop out/ios27-magisk/module.prop
           cp magisk/customize.sh out/ios27-magisk/customize.sh
+          chmod 755 out/ios27-magisk/customize.sh
           cp build/bootanimation.zip out/ios27-magisk/system/product/media/bootanimation.zip
-          cd out
-          zip -r iOS27-Magisk.zip ios27-magisk
+          cd out/ios27-magisk
+          zip -r ../iOS27-Magisk.zip .
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
