@@ -4,15 +4,18 @@ An Android-native iOS-inspired system shell, built for Android 14 (API 34) on AR
 
 ## Project status
 
-The repository starts with the native Android shell and a Magisk systemless boot-animation module. This is a staged implementation: a launcher app cannot replace Android Keyguard or SystemUI by itself. Those integrations will be developed as separate privileged/system components after the base shell is stable.
+The repository is being pivoted from the initial APK prototype to an AOSP-based Android 14 ARM64 GSI. The APK is retained only as a legacy UI prototype and is not the OS deliverable.
 
-## First milestone
+## GSI build foundation
 
-- Native Kotlin + Jetpack Compose launcher shell
-- iOS-inspired lock-screen preview and home screen
-- Dock, app grid, status indicators, Dynamic Island-style activity surface
-- Magisk module for `/product/media/bootanimation.zip`
-- GitHub Actions build artifacts: APK and Magisk ZIP
+- AOSP branch: `android14-gsi`
+- Product: `gsi_arm64-userdebug`
+- Target device: TECNO KL5n, ARM64, MT6768
+- Product integration: `vendor/ios27/ios27_gsi.mk`
+- Build entry point: `tools/build-gsi.sh`
+- Manual CI: `.github/workflows/gsi.yml` on a self-hosted Linux x86_64 runner
+
+The GSI supplies `system.img`; the device-specific vendor and boot partitions are not replaced.
 
 ## Device target
 
@@ -23,4 +26,4 @@ The repository starts with the native Android shell and a Magisk systemless boot
 
 ## Build
 
-Open the project in Android Studio or run `./gradlew assembleDebug`.
+AOSP requires a dedicated Linux x86_64 build host with at least 350 GB free disk and 64 GB RAM recommended. Run `bash tools/build-gsi.sh`. See the root README for details.
