@@ -1,0 +1,53 @@
+name: iOS 27.3 ARM64 build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios27-\${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-boot:
+    name: Build ARM64 EFI image and boot in QEMU
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install toolchain and emulator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            binutils-aarch64-linux-gnu \
+            gnu-efi \
+            qemu-system-arm \
+            qemu-efi-aarch64 \
+            mtools \
+            dosfstools
+
+      - name: Build ARM64 EFI image
+        run: bash tools/build.sh
+
+      - name: Boot image in QEMU
+        run: bash tools/run-qemu.sh
+
+      - name: Upload boot image
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios27.3-arm64-uefi
+          path: |
+            build/ios27.3-arm64.img
+            build/BOOTAA64.EFI
+          if-no-files-found: error
+          retention-days: 14
