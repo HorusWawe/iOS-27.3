@@ -63,7 +63,7 @@ COMMANDS = {
 
 SENSITIVE = re.compile(
     r"(?i)(androidboot\.(?:serialno|serial|imei|wifimacaddr|btmacaddr|macaddr)\s*=|"
-    r"(?:serialno|imei|meid|macaddr|wifi_mac|bt_mac)\s*[:=]\s*)[^\s]+"
+    r"(?:serialno|serial|imei|meid|macaddr|wifi_mac|bt_mac)\s*[:=]\s*)[^\s]+"
 )
 
 
