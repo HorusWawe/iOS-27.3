@@ -1,6 +1,13 @@
 name: AOSP GSI build
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/gsi.yml'
+      - 'tools/**'
+      - 'vendor/ios27/**'
+      - 'README.md'
   workflow_dispatch:
     inputs:
       clean_sync:
