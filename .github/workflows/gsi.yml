@@ -1,23 +1,17 @@
-name: AOSP GSI build
+name: AOSP GSI build (ephemeral Google Cloud VM)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/gsi.yml'
-      - 'tools/**'
-      - 'vendor/ios27/**'
-      - 'README.md'
   workflow_dispatch:
     inputs:
       clean_sync:
-        description: Delete the existing AOSP checkout before syncing
+        description: Remove the previous AOSP source checkout (fresh sync)
         required: false
         type: boolean
         default: false
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: ios27-aosp-gsi
@@ -25,43 +19,99 @@ concurrency:
 
 jobs:
   build-gsi:
-    runs-on: [self-hosted, Linux, X64, aosp]
-    timeout-minutes: 1440
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_WIF_PROVIDER: ${{ secrets.GCP_WIF_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      GCE_ZONE: us-central1-a
+      INSTANCE: ios27-gsi-${{ github.run_id }}
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
-      - name: Check build host
+
+      - name: Validate cloud configuration
         shell: bash
         run: |
           set -euo pipefail
-          test "$(uname -s)" = Linux
-          test "$(uname -m)" = x86_64
-          free -h
-          df -h .
-          test "$(df -BG . | awk 'NR==2 {gsub(/G/,"",$4); print $4}')" -ge 350
-      - name: Install repo launcher
+          for name in GCP_PROJECT_ID GCP_WIF_PROVIDER GCP_SERVICE_ACCOUNT; do
+            [[ -n "${!name}" ]] || { echo "Missing GitHub Actions secret: $name" >&2; exit 2; }
+          done
+
+      - name: Authenticate to Google Cloud using GitHub OIDC
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Install Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Provision temporary AOSP builder
         shell: bash
         run: |
-          mkdir -p "$HOME/bin"
-          curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo"
-          chmod a+x "$HOME/bin/repo"
-          echo "$HOME/bin" >> "$GITHUB_PATH"
-      - name: Reset AOSP checkout when requested
-        if: inputs.clean_sync
-        run: rm -rf .aosp
-      - name: Build Android 14 ARM64 GSI
+          set -euo pipefail
+          gcloud compute instances create "$INSTANCE" \
+            --project="$GCP_PROJECT_ID" \
+            --zone="$GCE_ZONE" \
+            --machine-type=n2-highmem-16 \
+            --boot-disk-size=600GB \
+            --boot-disk-type=pd-ssd \
+            --image-family=ubuntu-2204-lts \
+            --image-project=ubuntu-os-cloud \
+            --scopes=https://www.googleapis.com/auth/cloud-platform \
+            --labels=purpose=ios27-gsi,run-id=${{ github.run_id }} \
+            --quiet
+
+      - name: Build Android 14 ARM64 GSI on cloud VM
         shell: bash
-        run: bash tools/build-gsi.sh
-        env:
-          AOSP_DIR: ${{ github.workspace }}/.aosp
-      - name: Upload system image
+        run: |
+          set -euo pipefail
+          gcloud compute ssh "$INSTANCE" --project="$GCP_PROJECT_ID" --zone="$GCE_ZONE" --quiet --command='
+            set -euxo pipefail
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev libc6-dev-i386 libncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python3 python-is-python3
+            mkdir -p "$HOME/bin"
+            curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo"
+            chmod a+x "$HOME/bin/repo"
+            export PATH="$HOME/bin:$PATH"
+            git clone --depth=1 https://github.com/HorusWawe/iOS-27.3.git "$HOME/iOS-27.3"
+            cd "$HOME/iOS-27.3"
+            if [[ "${{ inputs.clean_sync }}" == "true" ]]; then rm -rf /mnt/aosp/.repo; fi
+            AOSP_DIR=/mnt/aosp JOBS=16 bash tools/build-gsi.sh
+          '
+
+      - name: Download GSI image from temporary VM
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          gcloud compute scp --project="$GCP_PROJECT_ID" --zone="$GCE_ZONE" --quiet \
+            "$INSTANCE:~/iOS-27.3/out/iOS27-KL5n-GSI-arm64-system.img" out/
+          gcloud compute scp --project="$GCP_PROJECT_ID" --zone="$GCE_ZONE" --quiet \
+            "$INSTANCE:~/iOS-27.3/out/SHA256SUMS" out/
+          gcloud compute scp --project="$GCP_PROJECT_ID" --zone="$GCE_ZONE" --quiet \
+            "$INSTANCE:~/iOS-27.3/out/IMAGE-INFO.txt" out/
+          gcloud compute scp --project="$GCP_PROJECT_ID" --zone="$GCE_ZONE" --quiet \
+            "$INSTANCE:~/iOS-27.3/out/installed-files.txt" out/ || true
+          cd out
+          sha256sum -c SHA256SUMS
+
+      - name: Upload GSI artifact
         uses: actions/upload-artifact@v4
         with:
           name: iOS27-KL5n-GSI-arm64
-          path: |
-            out/iOS27-KL5n-GSI-arm64-system.img
-            out/SHA256SUMS
-            out/IMAGE-INFO.txt
-            out/installed-files.txt
+          path: out/
           if-no-files-found: error
           retention-days: 14
+
+      - name: Delete temporary cloud VM
+        if: always()
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ -n "${GCP_PROJECT_ID:-}" ]]; then
+            gcloud compute instances delete "$INSTANCE" --project="$GCP_PROJECT_ID" --zone="$GCE_ZONE" --quiet
+          fi
