@@ -1,29 +1,37 @@
 # iOS 27.3 for TECNO KL5n
 
-An AOSP-based Android 14 ARM64 Generic System Image project for TECNO KL5n, with an iOS-inspired native system interface.
+An AOSP Android 14 ARM64 Generic System Image project. The deliverable is a native Android `system.img`, not an APK launcher.
 
-## Project status
+## Build target
 
-The repository is being pivoted from the initial APK prototype to an AOSP-based Android 14 ARM64 GSI. The APK is retained only as a legacy UI prototype and is not the OS deliverable.
+- AOSP GSI branch: `android14-gsi`
+- Product: `ios27_gsi_arm64-userdebug`
+- Device path: `generic_arm64`
+- Architecture: ARM64, 64-bit Binder
+- Output: `out/iOS27-KL5n-GSI-arm64-system.img`
 
-## GSI build foundation
+The custom product inherits the upstream `device/generic/common/gsi_arm64.mk` and changes product identity only. It does not patch upstream AOSP makefiles.
 
-- AOSP branch: `android14-gsi`
-- Product: `gsi_arm64-userdebug`
-- Target device: TECNO KL5n, ARM64, MT6768
-- Product integration: `vendor/ios27/ios27_gsi.mk`
-- Build entry point: `tools/build-gsi.sh`
-- Manual CI: `.github/workflows/gsi.yml` on a self-hosted Linux x86_64 runner
+## Build host
 
-The GSI supplies `system.img`; the device-specific vendor and boot partitions are not replaced.
+Use a dedicated Linux x86_64 machine. Allocate at least 350 GB free disk; 64 GB RAM is recommended. The script chooses a conservative parallel job count based on available RAM (maximum 24).
 
-## Device target
+Install the standard AOSP host packages and the Google `repo` launcher, then run:
 
-- TECNO KL5n
-- Android 14 / API 34
-- ARM64
-- MediaTek MT6768
+```bash
+bash tools/build-gsi.sh
+```
 
-## Build
+The GitHub Actions workflow is manual and requires a self-hosted runner labelled `aosp` with the same storage and memory capacity. GitHub-hosted runners are not suitable for a full AOSP source checkout and build.
 
-AOSP requires a dedicated Linux x86_64 build host with at least 350 GB free disk and 64 GB RAM recommended. Run `bash tools/build-gsi.sh`. See the root README for details.
+## Device boundary
+
+The GSI build produces the generic `system.img` only. It does not replace KL5n-specific `vendor`, `odm`, `boot`, `init_boot`, `vendor_boot`, `dtbo`, `vbmeta`, or super metadata.
+
+Device facts currently recorded: TECNO KL5n, Android 14/API 34, ARM64, MediaTek MT6768, vendor API 31, Treble and dynamic partitions enabled, Virtual A/B enabled.
+
+A successful generic AOSP build proves that the GSI image was produced. It does not by itself prove KL5n hardware compatibility. VINTF, vendor interfaces, partition capacity, audio, camera, radio, fingerprint, sensors, power HAL and SELinux still require device validation.
+
+## Current implementation status
+
+The product registration and reproducible build entry point are in place. The iOS-style SystemUI, Keyguard, framework overlays and native system apps are separate implementation work and are not falsely represented as completed.
