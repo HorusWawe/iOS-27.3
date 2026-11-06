@@ -1,0 +1,48 @@
+name: AOSP GSI build
+
+on:
+  workflow_dispatch:
+    inputs:
+      clean_sync:
+        description: Re-sync AOSP source tree
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios27-aosp-gsi
+  cancel-in-progress: false
+
+jobs:
+  build-gsi:
+    runs-on: [self-hosted, Linux, X64, aosp]
+    timeout-minutes: 1440
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Install repo launcher
+        run: |
+          mkdir -p "$HOME/bin"
+          curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo"
+          chmod a+x "$HOME/bin/repo"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: Reset AOSP checkout when requested
+        if: inputs.clean_sync
+        run: rm -rf .aosp/.repo
+      - name: Build Android 14 ARM64 GSI
+        run: bash tools/build-gsi.sh
+        env:
+          AOSP_DIR: ${{ github.workspace }}/.aosp
+      - name: Upload system image
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS27-KL5n-GSI-arm64
+          path: |
+            out/iOS27-KL5n-GSI-arm64-system.img
+            out/SHA256SUMS
+            out/installed-files.txt
+          if-no-files-found: error
+          retention-days: 14
