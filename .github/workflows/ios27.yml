@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ios27-\${{ github.ref }}
+  group: ios27-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -28,11 +28,17 @@ jobs:
         timeout-minutes: 4
         run: |
           set -euo pipefail
-          sudo apt-get update \
-            -o Acquire::http::Timeout=20 \
-            -o Acquire::https::Timeout=20 \
-            -o Acquire::Retries=1
-          sudo apt-get install -y --no-install-recommends \
+
+          echo "Refreshing apt indexes (hard limit: 75 seconds)..."
+          if ! timeout --signal=TERM --kill-after=5s 75s sudo apt-get update \
+            -o Acquire::http::Timeout=15 \
+            -o Acquire::https::Timeout=15 \
+            -o Acquire::Retries=0; then
+            echo "::warning::apt-get update failed or timed out; trying the runner's existing package indexes."
+          fi
+
+          echo "Installing build and QEMU dependencies (hard limit: 150 seconds)..."
+          timeout --signal=TERM --kill-after=5s 150s sudo apt-get install -y --no-install-recommends \
             clang \
             lld \
             qemu-system-arm \
