@@ -134,7 +134,7 @@ private fun LockScreen(onUnlock: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 42.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                LockShortcut(Icons.Default.Flashlight)
+                LockShortcut(Icons.Default.FlashlightOn)
                 LockShortcut(R.drawable.ios_camera)
             }
             Spacer(Modifier.height(28.dp))
