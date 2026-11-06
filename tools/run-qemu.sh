@@ -34,7 +34,7 @@ echo "Using UEFI firmware: $FIRMWARE"
 
 LOG="build/qemu-boot.log"
 set +e
-timeout 18s "$QEMU" -L "$ROM_DIR" -machine virt -cpu cortex-a72 -m 512M -bios "$FIRMWARE" -drive if=none,id=esp,format=raw,file=build/ios27.3-arm64.img -device virtio-blk-device,drive=esp -display none -serial stdio -monitor none -no-reboot 2>&1 | tee "$LOG"
+timeout 18s "$QEMU" -L "$ROM_DIR" -machine virt -cpu cortex-a72 -m 512M -bios "$FIRMWARE" -device ramfb -drive if=none,id=esp,format=raw,file=build/ios27.3-arm64.img -device virtio-blk-device,drive=esp -display none -serial stdio -monitor none -no-reboot 2>&1 | tee "$LOG"
 QEMU_STATUS=${PIPESTATUS[0]}
 set -e
 
@@ -42,5 +42,9 @@ if ! grep -q 'IOS27_BOOT_OK' "$LOG"; then
   echo "QEMU did not report the iOS 27.3 boot marker (exit: $QEMU_STATUS)." >&2
   exit 1
 fi
+if ! grep -q 'GOP_READY' "$LOG"; then
+  echo "EFI started, but GOP was not available. Check the QEMU display device." >&2
+  exit 1
+fi
 
-echo "QEMU boot smoke test passed."
+echo "QEMU boot and GOP smoke tests passed."
