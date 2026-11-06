@@ -4,7 +4,8 @@
 
 - [x] Remove the previous AOSP/GSI/Cuttlefish project files.
 - [x] Establish an AArch64 UEFI build target.
-- [x] Draw a persistent GOP framebuffer boot screen and report GOP detection.
+- [x] Draw a persistent GOP framebuffer UI and report GOP detection.
+- [x] Add a welcome page, clickable home grid, placeholder app pages and software pointer support for UEFI Simple Pointer.
 - [x] Build a FAT EFI System Partition image in CI.
 - [x] Boot the image in QEMU and check the boot marker and GOP availability.
 - [ ] Confirm the first clean GitHub Actions run.
@@ -12,6 +13,7 @@
 ## Stage 1 - platform core
 
 - [ ] Define the platform ABI and firmware handoff contract.
+- [ ] Replace the EFI-only UI prototype with a standalone kernel and native display/input subsystems.
 - [ ] Add a standalone kernel image and a UEFI loader.
 - [ ] Add physical/virtual memory management and exception handling.
 - [ ] Add interrupt controller and timer support.
@@ -37,6 +39,8 @@
 IPA compatibility is a long-term runtime and framework project. Reading an IPA archive is not equivalent to executing its application binary.
 
 ## Stage 4 - KL5n hardware bring-up
+
+Reference projects: Project Silicium/Mu-Silicium (MT6768-family UEFI and Redmi 9/lancelot board reference), ios-sweet (iOS 16/XNU 8796 bring-up), and ios-fuxi (separate XNU 12377/iOS 27 research lane). See [REFERENCE_PORTS.md](REFERENCE_PORTS.md).
 
 - [ ] Document the exact bootloader chain and partition map.
 - [ ] Obtain and inspect device tree and firmware components.
