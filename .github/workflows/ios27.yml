@@ -30,20 +30,21 @@ jobs:
           set -euo pipefail
 
           echo "Refreshing apt indexes (hard limit: 75 seconds)..."
-          if ! timeout --signal=TERM --kill-after=5s 75s sudo apt-get update \
-            -o Acquire::http::Timeout=15 \
-            -o Acquire::https::Timeout=15 \
+          if ! timeout --signal=TERM --kill-after=5s 75s sudo apt-get update \\
+            -o Acquire::http::Timeout=15 \\
+            -o Acquire::https::Timeout=15 \\
             -o Acquire::Retries=0; then
             echo "::warning::apt-get update failed or timed out; trying the runner's existing package indexes."
           fi
 
           echo "Installing build and QEMU dependencies (hard limit: 150 seconds)..."
-          timeout --signal=TERM --kill-after=5s 150s sudo apt-get install -y --no-install-recommends \
-            clang \
-            lld \
-            qemu-system-arm \
-            qemu-efi-aarch64 \
-            mtools \
+          timeout --signal=TERM --kill-after=5s 150s sudo apt-get install -y --no-install-recommends \\
+            clang \\
+            lld \\
+            qemu-system-arm \\
+            qemu-efi-aarch64 \\
+            ipxe-qemu \\
+            mtools \\
             dosfstools
 
       - name: Build ARM64 EFI image
