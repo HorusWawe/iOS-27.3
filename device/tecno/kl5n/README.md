@@ -6,7 +6,8 @@ This directory records the first physical-device target for iOS 27.3.
 |---|---|
 | Device | TECNO KL5n |
 | CPU ABI | ARM64 / arm64-v8a |
-| SoC | MediaTek MT6768 |
+| Android platform ID | mt6768 (reported) |
+| Retail SoC identification | Helio G81 / MT6769S is reported by device-spec sources; verify against live device data before selecting the exact silicon profile |
 | Factory software family | Android 14 / API 34 |
 | Vendor API | 31 |
 | Treble | Enabled |
