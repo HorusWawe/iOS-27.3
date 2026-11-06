@@ -1,12 +1,9 @@
-# iOS 27.3 system integration
+# iOS 27.3 product integration
 
-This directory is part of the AOSP source build, not an Android application.
+The AOSP build imports `ios27_gsi_arm64.mk` through `AndroidProducts.mk` and selects the dedicated lunch target:
 
-Actual interface work belongs in AOSP source packages:
-- `frameworks/base/packages/SystemUI`: status bar, lock screen, quick settings and notification shade.
-- `frameworks/base/core/res`: framework resources and configuration.
-- `packages/apps/Launcher3` or a dedicated system launcher package: home screen and recents integration.
-- `packages/apps/Settings`: system settings experience.
-- `frameworks/base/services`: platform services and system behavior, only where required.
+`ios27_gsi_arm64-userdebug`
 
-All changes must be compiled into the system image. A regular APK cannot replace Keyguard or SystemUI.
+The product inherits the official Android 14 ARM64 GSI configuration from `device/generic/common/gsi_arm64.mk`. The resulting output remains the standard generic ARM64 system image at `out/target/product/generic_arm64/system.img`.
+
+No Android APK, launcher-only package, or Magisk module is used as the operating-system deliverable.
