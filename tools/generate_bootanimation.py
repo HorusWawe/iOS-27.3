@@ -5,7 +5,7 @@ import math
 import zipfile
 
 W, H = 720, 1280
-FRAMES = 48
+FRAMES = 180
 OUT = Path("build")
 PART = OUT / "bootanim" / "part0"
 PART.mkdir(parents=True, exist_ok=True)
