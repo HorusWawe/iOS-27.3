@@ -27,7 +27,7 @@ timeout 18s "$QEMU" \
   -machine virt -cpu cortex-a72 -m 512M \
   -bios "$FIRMWARE" \
   -drive if=none,id=esp,format=raw,file=build/ios27.3-arm64.img \
-  -device virtio-blk-device,drive=esp \
+  -device virtio-blk-device,drive=esp,romfile= \
   -display none -serial stdio -monitor none -no-reboot \
   2>&1 | tee "$LOG"
 QEMU_STATUS=${PIPESTATUS[0]}
