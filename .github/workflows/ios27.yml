@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install toolchain and emulator
-        timeout-minutes: 4
+        timeout-minutes: 6
         run: |
           set -euo pipefail
           echo "Refreshing apt indexes (hard limit: 75 seconds)..."
@@ -33,7 +33,7 @@ jobs:
             echo "::warning::apt-get update failed or timed out; trying the runner's existing package indexes."
           fi
           echo "Installing build and QEMU dependencies (hard limit: 150 seconds)..."
-          timeout --signal=TERM --kill-after=5s 150s sudo apt-get install -y --no-install-recommends clang lld qemu-system-arm qemu-efi-aarch64 ipxe-qemu mtools dosfstools
+          timeout --signal=TERM --kill-after=5s 300s sudo apt-get install -y --no-install-recommends clang lld qemu-system-arm qemu-efi-aarch64 ipxe-qemu mtools dosfstools
 
       - name: Validate KL5n inventory tool
         run: python3 -m py_compile tools/collect-kl5n.py
