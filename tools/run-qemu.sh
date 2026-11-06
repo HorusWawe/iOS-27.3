@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "\${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-QEMU="\${QEMU_AARCH64:-qemu-system-aarch64}"
-FIRMWARE="\${UEFI_FIRMWARE:-}"
+QEMU="${QEMU_AARCH64:-qemu-system-aarch64}"
+FIRMWARE="${UEFI_FIRMWARE:-}"
 
 if [[ -z "$FIRMWARE" ]]; then
   FIRMWARE="$(find /usr/share -type f \( -name 'QEMU_EFI.fd' -o -name 'AAVMF_CODE.fd' \) -print -quit)"
@@ -30,7 +30,7 @@ timeout 18s "$QEMU" \
   -device virtio-blk-device,drive=esp \
   -display none -serial stdio -monitor none -no-reboot \
   2>&1 | tee "$LOG"
-QEMU_STATUS=\${PIPESTATUS[0]}
+QEMU_STATUS=${PIPESTATUS[0]}
 set -e
 
 if ! grep -q 'IOS27_BOOT_OK' "$LOG"; then
