@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       clean_sync:
-        description: Re-sync AOSP source tree
+        description: Delete the existing AOSP checkout before syncing
         required: false
         type: boolean
         default: false
@@ -23,7 +23,17 @@ jobs:
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
+      - name: Check build host
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -s)" = Linux
+          test "$(uname -m)" = x86_64
+          free -h
+          df -h .
+          test "$(df -BG . | awk 'NR==2 {gsub(/G/,"",$4); print $4}')" -ge 350
       - name: Install repo launcher
+        shell: bash
         run: |
           mkdir -p "$HOME/bin"
           curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo"
@@ -31,8 +41,9 @@ jobs:
           echo "$HOME/bin" >> "$GITHUB_PATH"
       - name: Reset AOSP checkout when requested
         if: inputs.clean_sync
-        run: rm -rf .aosp/.repo
+        run: rm -rf .aosp
       - name: Build Android 14 ARM64 GSI
+        shell: bash
         run: bash tools/build-gsi.sh
         env:
           AOSP_DIR: ${{ github.workspace }}/.aosp
@@ -43,6 +54,7 @@ jobs:
           path: |
             out/iOS27-KL5n-GSI-arm64-system.img
             out/SHA256SUMS
+            out/IMAGE-INFO.txt
             out/installed-files.txt
           if-no-files-found: error
           retention-days: 14
