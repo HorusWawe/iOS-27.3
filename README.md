@@ -1,45 +1,41 @@
 # iOS 27.3 for TECNO KL5n
 
-AOSP-based Android 14 ARM64 Generic System Image project. The OS deliverable is a native Android `system.img`, not an APK launcher.
+AOSP-based Android 14 project. Development now uses **Cuttlefish**, the AOSP virtual Android device, so the source-built OS can be booted and interacted with directly from the build tree instead of exporting and manually flashing a standalone `system.img`.
 
-## Build target
+## Run the OS from source
+
+The development target is:
 
 - AOSP branch: `android14-gsi`
-- Official GSI lunch target: `gsi_arm64-userdebug`
-- Device path: `generic_arm64`
-- Architecture: ARM64, 64-bit Binder
-- Output: `out/iOS27-KL5n-GSI-arm64-system.img`
+- Cuttlefish product: `aosp_cf_x86_64_phone-userdebug`
+- Host: Linux x86_64 with KVM
+- Runtime: Cuttlefish + browser-based WebRTC viewer
+- Browser UI: `https://localhost:8443`
 
-The build uses the upstream AOSP GSI target and adds the project product identity through `vendor/ios27/ios27_gsi.mk`. It does not invent a separate lunch target.
+On the Linux build host, install the AOSP host dependencies and the Cuttlefish host packages. The official Cuttlefish setup builds and installs the host Debian packages from [google/android-cuttlefish](https://github.com/google/android-cuttlefish). The host must have working `/dev/kvm`.
 
-## Build without a self-hosted runner
+Then run:
 
-GitHub Actions starts an ephemeral Google Compute Engine VM, builds the image there, downloads the artifact, and deletes the VM even when the job fails.
+```bash
+AOSP_DIR=/mnt/aosp JOBS=16 bash tools/run-cuttlefish.sh
+```
 
-The temporary builder is configured as:
-- Ubuntu 22.04 x86_64
-- `n2-highmem-16` (16 vCPU, 128 GB RAM)
-- 600 GB SSD boot disk
-- zone `us-central1-a`
+The script syncs Android 14 sources, applies the project product identity, selects the Cuttlefish lunch target, builds the OS and launches it. No standalone GSI artifact is exported. AOSP still generates internal build partitions because Cuttlefish needs them to boot, but the workflow goes straight from source build to running virtual device.
 
-One-time Google Cloud configuration is required. Enable Compute Engine API and configure Workload Identity Federation for this GitHub repository. Add these GitHub Actions repository secrets:
+Use `adb shell` for the device shell and `stop_cvd` to stop the virtual device.
 
-- `GCP_PROJECT_ID`: Google Cloud project ID with billing enabled
-- `GCP_WIF_PROVIDER`: full Workload Identity Provider resource name
-- `GCP_SERVICE_ACCOUNT`: service account email
+## Why the emulator target is x86_64
 
-The service account needs permission to create, inspect, SSH into, and delete Compute Engine instances, plus `iam.serviceAccountUser` on the VM service account. The project needs quota for `n2-highmem-16` and a 600 GB persistent SSD in the selected zone. The workflow is manually started from Actions.
+The Cuttlefish host runs on a Linux x86_64 machine with KVM. The virtual Android target is therefore x86_64 for efficient native virtualization. This is the interactive UI/framework development target, not the final KL5n firmware architecture. The release target remains ARM64 and must be validated separately against the device's vendor interfaces and partition layout.
 
-This is an ephemeral managed cloud VM, not a self-hosted GitHub runner. VM compute and disk usage are billed by Google Cloud while the build runs.
+## TECNO KL5n device boundary
 
-## Device boundary
-
-The GSI build produces the generic `system.img` only. It does not replace KL5n-specific `vendor`, `odm`, `boot`, `init_boot`, `vendor_boot`, `dtbo`, `vbmeta`, or super metadata.
+The final GSI supplies the generic Android system side only. Device-specific `vendor`, `odm`, `boot`, `init_boot`, `vendor_boot`, `dtbo`, `vbmeta`, and super metadata remain tied to the exact KL5n firmware.
 
 Known target facts: TECNO KL5n, Android 14/API 34, ARM64, MediaTek MT6768, vendor API 31, Treble and dynamic partitions enabled, Virtual A/B enabled.
 
-A successful AOSP build proves image generation, not full KL5n hardware compatibility. VINTF, vendor interfaces, partition capacity, audio, camera, radio, fingerprint, sensors, power HAL and SELinux still require device validation.
+A successful Cuttlefish boot proves that the source-built virtual target starts. It does not prove KL5n hardware compatibility.
 
 ## Current implementation status
 
-The build pipeline creates the native Android 14 GSI. The iOS-style SystemUI, Keyguard, framework overlays, boot animation and native system apps remain separate AOSP implementation tasks. They are not represented as completed.
+The repository now has a source-to-Cuttlefish development path. The iOS-style SystemUI, Keyguard, framework overlays, boot animation and native system apps remain implementation tasks; they are not represented as completed.
