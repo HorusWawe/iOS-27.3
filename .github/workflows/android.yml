@@ -1,0 +1,54 @@
+name: Android build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Generate boot animation
+        run: |
+          python3 tools/generate_bootanimation.py
+          mkdir -p app/src/main/res/drawable-nodpi
+          python3 tools/generate_app_icons.py
+
+      - name: Build debug APK
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Package Magisk module
+        run: |
+          mkdir -p out/ios27-magisk/system/product/media
+          cp magisk/module.prop out/ios27-magisk/module.prop
+          cp magisk/customize.sh out/ios27-magisk/customize.sh
+          cp build/bootanimation.zip out/ios27-magisk/system/product/media/bootanimation.zip
+          cd out
+          zip -r iOS27-Magisk.zip ios27-magisk
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS27-0.1.0
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            out/iOS27-Magisk.zip
+          if-no-files-found: error
