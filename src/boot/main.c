@@ -110,48 +110,6 @@ static const EFI_GUID GOP_GUID = {
     {0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a}
 };
 
-static EFI_STATUS
-fill_rect(EFI_GRAPHICS_OUTPUT_PROTOCOL *gop,
-          EFI_UINTN x, EFI_UINTN y, EFI_UINTN width, EFI_UINTN height,
-          uint8_t red, uint8_t green, uint8_t blue)
-{
-    EFI_GRAPHICS_OUTPUT_BLT_PIXEL pixel = {blue, green, red, 0};
-    return gop->Blt(gop, &pixel, 0, 0, 0, x, y, width, height, 0);
-}
-
-static void
-draw_boot_screen(EFI_SYSTEM_TABLE *system_table)
-{
-    EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = 0;
-    EFI_STATUS status = system_table->BootServices->LocateProtocol(
-        (EFI_GUID *)&GOP_GUID, 0, (void **)&gop
-    );
-
-    if (status != 0 || gop == 0 || gop->Mode == 0 || gop->Mode->Info == 0)
-        return;
-
-    EFI_UINTN width = gop->Mode->Info->HorizontalResolution;
-    EFI_UINTN height = gop->Mode->Info->VerticalResolution;
-
-    (void)fill_rect(gop, 0, 0, width, height, 12, 12, 16);
-
-    EFI_UINTN card_width = width > 720 ? 560 : width * 3 / 4;
-    EFI_UINTN card_height = height > 520 ? 250 : height / 2;
-    EFI_UINTN card_x = (width - card_width) / 2;
-    EFI_UINTN card_y = (height - card_height) / 2;
-
-    (void)fill_rect(gop, card_x, card_y, card_width, card_height,
-                    25, 25, 31);
-
-    EFI_UINTN bar_width = card_width > 100 ? card_width - 100 : 40;
-    EFI_UINTN bar_x = card_x + (card_width - bar_width) / 2;
-    EFI_UINTN bar_y = card_y + card_height - 48;
-
-    (void)fill_rect(gop, bar_x, bar_y, bar_width, 4, 62, 62, 72);
-    (void)fill_rect(gop, bar_x, bar_y, bar_width / 3, 4,
-                    235, 235, 240);
-}
-
 static CHAR16 line1[] = {
     'i','O','S',' ','2','7','.','3',' ','A','R','M','6','4',' ','d','e','v','e','l','o','p','m','e','n','t',' ','b','o','o','t',13,10,0
 };
@@ -161,9 +119,73 @@ static CHAR16 line2[] = {
 static CHAR16 line3[] = {
     'B','o','o','t',' ','s','t','a','g','e',':',' ','U','E','F','I',' ','+',' ','G','O','P',' ','f','r','a','m','e','b','u','f','f','e','r',13,10,0
 };
+static CHAR16 gop_ready[] = {
+    'G','O','P','_','R','E','A','D','Y',13,10,0
+};
+static CHAR16 gop_missing[] = {
+    'G','O','P','_','N','O','T','_','F','O','U','N','D',13,10,0
+};
+static CHAR16 screen_rendered[] = {
+    'B','O','O','T','_','S','C','R','E','E','N','_','R','E','N','D','E','R','E','D',13,10,0
+};
 static CHAR16 marker[] = {
     'I','O','S','2','7','_','B','O','O','T','_','O','K',13,10,0
 };
+
+static EFI_STATUS
+fill_rect(EFI_GRAPHICS_OUTPUT_PROTOCOL *gop,
+          EFI_UINTN x, EFI_UINTN y, EFI_UINTN width, EFI_UINTN height,
+          uint8_t red, uint8_t green, uint8_t blue)
+{
+    EFI_GRAPHICS_OUTPUT_BLT_PIXEL pixel = {blue, green, red, 0};
+    return gop->Blt(gop, &pixel, 0, 0, 0, x, y, width, height, 0);
+}
+
+static int
+draw_boot_screen(EFI_SYSTEM_TABLE *system_table)
+{
+    EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = 0;
+    EFI_STATUS status = system_table->BootServices->LocateProtocol(
+        (EFI_GUID *)&GOP_GUID, 0, (void **)&gop
+    );
+
+    if (status != 0 || gop == 0 || gop->Mode == 0 || gop->Mode->Info == 0 ||
+        gop->Blt == 0)
+        return 0;
+
+    EFI_UINTN width = gop->Mode->Info->HorizontalResolution;
+    EFI_UINTN height = gop->Mode->Info->VerticalResolution;
+    if (width < 160 || height < 120)
+        return 0;
+
+    if (fill_rect(gop, 0, 0, width, height, 12, 12, 16) != 0)
+        return 0;
+
+    EFI_UINTN card_width = width > 720 ? 560 : width * 3 / 4;
+    EFI_UINTN card_height = height > 520 ? 250 : height / 2;
+    EFI_UINTN card_x = (width - card_width) / 2;
+    EFI_UINTN card_y = (height - card_height) / 2;
+
+    (void)fill_rect(gop, card_x, card_y, card_width, card_height,
+                    25, 25, 31);
+
+    /* Minimal centered mark and a static progress indicator. */
+    EFI_UINTN mark_width = 54;
+    EFI_UINTN mark_x = (width - mark_width) / 2;
+    EFI_UINTN mark_y = card_y + 54;
+    (void)fill_rect(gop, mark_x, mark_y, mark_width, 5, 235, 235, 240);
+    (void)fill_rect(gop, mark_x + 24, mark_y + 5, 6, 34, 235, 235, 240);
+    (void)fill_rect(gop, mark_x + 9, mark_y + 39, 36, 5, 235, 235, 240);
+
+    EFI_UINTN bar_width = card_width > 100 ? card_width - 100 : 40;
+    EFI_UINTN bar_x = card_x + (card_width - bar_width) / 2;
+    EFI_UINTN bar_y = card_y + card_height - 48;
+
+    (void)fill_rect(gop, bar_x, bar_y, bar_width, 4, 62, 62, 72);
+    (void)fill_rect(gop, bar_x, bar_y, bar_width / 3, 4,
+                    235, 235, 240);
+    return 1;
+}
 
 EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
 {
@@ -176,12 +198,24 @@ EFI_STATUS efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table)
     if (system_table->ConOut->ClearScreen != 0)
         (void)system_table->ConOut->ClearScreen(system_table->ConOut);
 
-    draw_boot_screen(system_table);
-
     (void)system_table->ConOut->OutputString(system_table->ConOut, line1);
     (void)system_table->ConOut->OutputString(system_table->ConOut, line2);
     (void)system_table->ConOut->OutputString(system_table->ConOut, line3);
+
+    if (draw_boot_screen(system_table)) {
+        (void)system_table->ConOut->OutputString(system_table->ConOut, gop_ready);
+        (void)system_table->ConOut->OutputString(system_table->ConOut, screen_rendered);
+    } else {
+        (void)system_table->ConOut->OutputString(system_table->ConOut, gop_missing);
+    }
+
     (void)system_table->ConOut->OutputString(system_table->ConOut, marker);
 
-    return 0;
+    /*
+     * Keep the EFI application alive so the firmware boot manager does not
+     * immediately replace our framebuffer with its own UiApp screen.
+     */
+    for (;;) {
+        __asm__ volatile("wfe" ::: "memory");
+    }
 }
