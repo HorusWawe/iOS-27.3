@@ -4,9 +4,9 @@
 
 - [x] Remove the previous AOSP/GSI/Cuttlefish project files.
 - [x] Establish an AArch64 UEFI build target.
-- [x] Draw a basic GOP framebuffer boot screen.
+- [x] Draw a persistent GOP framebuffer boot screen and report GOP detection.
 - [x] Build a FAT EFI System Partition image in CI.
-- [x] Boot the image in QEMU and check a boot marker.
+- [x] Boot the image in QEMU and check the boot marker and GOP availability.
 - [ ] Confirm the first clean GitHub Actions run.
 
 ## Stage 1 - platform core
