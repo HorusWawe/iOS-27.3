@@ -39,6 +39,8 @@ COMMANDS = {
         "printf 'model: '; tr '\\000' ' ' < /proc/device-tree/model 2>/dev/null; "
         "printf '\\ncompatible:\\n'; tr '\\000' '\\n' < /proc/device-tree/compatible 2>/dev/null"
     ),
+    "cpu-info.txt": "cat /proc/cpuinfo 2>/dev/null",
+    "kernel-version.txt": "uname -a; cat /proc/version 2>/dev/null",
     "memory-map.txt": "cat /proc/iomem 2>/dev/null",
     "memory-info.txt": "cat /proc/meminfo 2>/dev/null",
     "interrupts.txt": "cat /proc/interrupts 2>/dev/null",
@@ -60,8 +62,8 @@ COMMANDS = {
 }
 
 SENSITIVE = re.compile(
-    r"(?i)(androidboot\.(?:serialno|serial|imei|wifimacaddr|btmacaddr|macaddr)"
-    r"|(?:serialno|imei|meid|macaddr|wifi_mac|bt_mac)=)[^\s]+"
+    r"(?i)(androidboot\.(?:serialno|serial|imei|wifimacaddr|btmacaddr|macaddr)\s*=|"
+    r"(?:serialno|imei|meid|macaddr|wifi_mac|bt_mac)\s*[:=]\s*)[^\s]+"
 )
 
 
@@ -85,7 +87,7 @@ def adb_shell(command: str) -> str:
 
 
 def sanitize(value: str) -> str:
-    return SENSITIVE.sub(lambda m: m.group(0).split("=")[0] + "=<redacted>", value)
+    return SENSITIVE.sub(lambda m: m.group(1) + "<redacted>", value)
 
 
 def main() -> int:
