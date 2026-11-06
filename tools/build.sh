@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "\${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-CLANG="\${CLANG:-clang}"
-LLD_LINK="\${LLD_LINK:-lld-link}"
+CLANG="${CLANG:-clang}"
+LLD_LINK="${LLD_LINK:-lld-link}"
 
 mkdir -p build
 
@@ -23,7 +23,6 @@ mkdir -p build
   /entry:efi_main \
   /nodefaultlib \
   /machine:arm64 \
-  /fixed \
   /out:build/BOOTAA64.EFI \
   build/main.obj
 
