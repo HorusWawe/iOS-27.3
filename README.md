@@ -12,9 +12,9 @@ The initial milestone is a UEFI-bootable ARM64 prototype:
 - ARM64 / AArch64 target.
 - QEMU \`virt\` machine for repeatable boot testing.
 - GitHub Actions builds the EFI executable, creates a FAT EFI System Partition image, boots it in QEMU, and uploads the result.
-- The prototype draws a persistent graphical boot screen through GOP, reports whether GOP was detected, and remains on the splash instead of returning to the firmware boot menu.
+- The prototype draws an interactive iOS-style welcome/home UI through GOP, exposes a software cursor through UEFI Simple Pointer when available, and remains active instead of returning to the firmware boot menu.
 
-The first image is a **development boot image**, not a flashable KL5n ROM. It proves the ARM64 build and boot path before kernel, runtime, drivers, and phone integration are added.
+The first image is a **development boot image**, not a flashable KL5n ROM. The clickable welcome/home shell and pointer are only an EFI UI prototype, not SpringBoard or a running iOS userland. The phone port remains a separate hardware bring-up.
 
 ## Build from GitHub Actions
 
@@ -50,4 +50,4 @@ The long-term target is an iOS-compatible platform implementation, not an Androi
 
 Known target: TECNO KL5n, ARM64, MediaTek MT6768, Android 14-era vendor firmware. The QEMU image is only the development target. Booting QEMU does not mean the phone's boot chain, display, touch, modem, camera, or power hardware is supported yet.
 
-See [device notes](device/tecno/kl5n/README.md) and [roadmap](docs/ROADMAP.md).
+See [device notes](device/tecno/kl5n/README.md), [reference ports](docs/REFERENCE_PORTS.md), and [roadmap](docs/ROADMAP.md).
