@@ -35,7 +35,11 @@ For local reproduction, use the same commands documented in \`.github/workflows/
 
 \`\`\`text
 .github/workflows/ios27.yml    CI build, QEMU boot test, artifact upload
-src/boot/main.c                ARM64 UEFI entry point and GOP boot screen
+src/boot/main.c                ARM64 UEFI entry point and current UI prototype
+src/boot/graphics/              GOP drawing and image-loading subsystem (scaffold)
+src/boot/ui/                   Boot screen, lock screen and UI components (scaffold)
+src/boot/input/                Pointer and input subsystem (scaffold)
+assets/boot/                   Apple logo, cursor and wallpaper resources
 tools/build.sh                 Cross-compile and create EFI disk image
 tools/run-qemu.sh              QEMU boot smoke test with USB input
 tools/collect-kl5n.py          Read-only KL5n hardware inventory
